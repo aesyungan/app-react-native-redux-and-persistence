@@ -2,11 +2,50 @@ import React, { Component } from 'react'
 import { View, Text, TextInput, StyleSheet, Platform, Button } from 'react-native';
 import { connect } from 'react-redux';
 import * as api from '../redux/actions';
+import { compose } from 'redux';
+import { firebaseConnect, isLoaded, isEmpty } from 'react-redux-firebase';
+const isNullObj = (data) => {
+    let resp = false;
+    if (data == null || data === 'null') {
+        resp = true;
+    }
+    return resp;
+}
 class DetailComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = { text: '' };
         console.log(this.props);
+      /*  this.props.firebase.auth.signInWithEmailAndPassword("yungan@hotmail.es", "Cuka2205").then(data => {
+ 
+             console.log(data);
+         });*/
+         this.login();
+         this.getDates();
+    }
+
+    getDates = async () => {
+        let data=null;
+        //  this.props.firebase.database
+        const dbDate = this.props.firebase.ref("t_date/");
+        let test = await dbDate.once('value');
+        if (isNullObj(test) == false) {
+            console.log("no null");
+            data = JSON.parse(JSON.stringify(test));
+        }
+        console.warn(data);
+    }
+
+    login = () => {
+        this.props.firebase.login({
+            email: 'yungan@hotmail.es',
+            password: 'Cuka2205'
+        }).then(data => {
+            console.log("login..");
+            console.log(data);
+            console.log(".........................................................");
+            console.log(this.props);
+        });
     }
 
     saveData = () => {
@@ -27,7 +66,7 @@ class DetailComponent extends React.Component {
                     value={this.state.text}
                 />
                 <Button
-                    onPress={this.saveData}
+                    onPress={this.getDates}
                     title="Save Data"
                     color="#841584"
                     accessibilityLabel="save data.."
@@ -53,7 +92,12 @@ const styles = StyleSheet.create(
     });
 //agrega los props
 const mapStateToProps = state => {
-    return { tabId: state.tabId }
+    return { tabId: state.tabId, firebase: state.firebase, location: state.location }
 }
-//parametro a map props y actions 
-export default connect(mapStateToProps, api)(DetailComponent)
+
+export default compose(
+    connect(mapStateToProps, api),
+    firebaseConnect()
+)(DetailComponent)
+//fin firebase
+//export default connect(mapStateToProps, api)(DetailComponent)
